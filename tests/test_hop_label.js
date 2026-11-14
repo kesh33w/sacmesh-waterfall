@@ -1,0 +1,10 @@
+const fs=require('fs'),vm=require('vm'),path=require('path'),assert=require('assert');
+const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+const source=html.match(/function hopLabel\(e\)\{[^\n]+\}/)[0];vm.runInThisContext(source);
+assert.equal(hopLabel({direction:'tx',transmitter_name:'Bridge'}),'Bridge');
+assert.equal(hopLabel({direction:'tx',sender:'Original'}),'unknown node');
+assert.equal(hopLabel({last_hop_candidates:2,last_hop_hash:'AB',last_hop_name:'Collision'}),'? AB ambiguous');
+assert.equal(hopLabel({last_hop_candidates:1,last_hop_name:'Repeater'}),'? Repeater');
+assert.equal(hopLabel({last_hop_hash:'CD'}),'hop CD?');
+assert.equal(hopLabel({sender:'Original'}),'unknown hop');
+console.log('PASS: TX name, unknown TX, collision precedence, candidate name, hash, no original-sender fallback');

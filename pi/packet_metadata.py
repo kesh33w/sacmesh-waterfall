@@ -59,12 +59,17 @@ def collect():
                 known_nodes.setdefault(str(n['pubkey']).lower(),n['node_name'] or '')
             known_nodes_at=now
         rows=db.execute('SELECT id,timestamp,type,length,rx_radio_id,tx_radio_id,transmitted,payload,packet_hash,upstream_hash,upstream_hash_size FROM packets INDEXED BY idx_packets_timestamp WHERE timestamp>=? ORDER BY timestamp DESC LIMIT 512',(now-60,)).fetchall()
+    try:
+        transmitter=json.loads(Path('/opt/waterfall-metadata/transmitter.json').read_text())
+        transmitter_name=clean(transmitter.get('name',''),64)
+    except Exception:transmitter_name=''
     events=[]
     for r in reversed(rows):
         is_tx=bool(r['transmitted'])
         radio=r['tx_radio_id'] if is_tx else r['rx_radio_id']
         if radio not in RADIOS:continue
         e={'time':r['timestamp'],'frequency_hz':RADIOS[radio],'radio':radio,'direction':'tx' if is_tx else 'rx','type':TYPES.get(r['type'],'OTHER'),'length':r['length'],'timing':'radio record time; approximate RF timing'}
+        if is_tx and transmitter_name:e['transmitter_name']=transmitter_name
         if not is_tx:e.update(last_hop(r['upstream_hash'],r['upstream_hash_size'],known_nodes))
         try:e.update(decode(r['type'],r['payload'] or ''))
         except Exception:pass
