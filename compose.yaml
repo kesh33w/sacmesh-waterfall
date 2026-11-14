@@ -1,0 +1,57 @@
+services:
+  waterfall:
+    image: sacmesh-waterfall:local
+    build:
+      context: .
+      args:
+        APP_UID: ${APP_UID:-1000}
+        APP_GID: ${APP_GID:-1000}
+    environment:
+      WATERFALL_SDR_HOST: ${WATERFALL_SDR_HOST:?Set the Pi SSH user and host}
+      WATERFALL_BIND: ${WATERFALL_BIND:-127.0.0.1}
+      WATERFALL_PORT: ${WATERFALL_PORT:-8767}
+      WATERFALL_TRUSTED_PROXIES: ${WATERFALL_TRUSTED_PROXIES:-}
+      WATERFALL_DOMAIN: ${WATERFALL_DOMAIN:-waterfall.sacmesh.org}
+    container_name: sacmesh-waterfall
+    network_mode: host
+    user: "${APP_UID:-1000}:${APP_GID:-1000}"
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 384m
+    cpu_shares: 512
+    pids_limit: 48
+    volumes:
+      - ./index.html:/app/index.html:ro
+      - ./ssh:/run/ssh:ro
+      - ./telemetry:/telemetry
+    tmpfs:
+      - /tmp:uid=${APP_UID:-1000},gid=${APP_GID:-1000},mode=700,size=16m
+      - /run/waterfall-metadata:uid=${APP_UID:-1000},gid=${APP_GID:-1000},mode=700,size=1m
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: "2"
+  tunnel:
+    profiles: [public]
+    image: cloudflare/cloudflared:2026.11.0
+    container_name: waterfall-tunnel
+    network_mode: host
+    user: "${APP_UID:-1000}:${APP_GID:-1000}"
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    command: tunnel --no-autoupdate --metrics 127.0.0.1:18768 run --token-file /run/tunnel-token
+    volumes:
+      - ./ssh/tunnel-token:/run/tunnel-token:ro
+    mem_limit: 192m
+    cpu_shares: 256
+    pids_limit: 64
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: "2"

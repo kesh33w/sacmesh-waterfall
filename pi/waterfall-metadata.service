@@ -1,0 +1,29 @@
+[Unit]
+Description=Read-only public radio metadata for waterfall
+After=openhop-repeater.service
+[Service]
+User=repeater
+Group=repeater
+ExecStart=/opt/openhop_repeater/venv/bin/python /opt/waterfall-metadata/packet_metadata.py
+Restart=always
+RestartSec=5
+RuntimeDirectory=waterfall-metadata
+RuntimeDirectoryMode=0755
+UMask=0022
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/run/waterfall-metadata
+PrivateTmp=true
+PrivateNetwork=true
+NoNewPrivileges=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+ProtectKernelModules=true
+RestrictAddressFamilies=AF_UNIX
+CapabilityBoundingSet=
+MemoryMax=96M
+CPUQuota=10%
+Nice=15
+TasksMax=8
+[Install]
+WantedBy=multi-user.target

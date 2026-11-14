@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env
+*.sock
+*.log
+*.sqlite*
+*.db
+ssh/
+telemetry/
