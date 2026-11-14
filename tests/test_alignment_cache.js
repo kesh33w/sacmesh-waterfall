@@ -1,0 +1,5 @@
+const fs=require('fs'),vm=require('vm'),path=require('path');
+const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+const start=html.indexOf('function computePacketAlignment('),end=html.indexOf('function drawPackets(',start);
+vm.runInThisContext(html.slice(start,end));
+const assert=require('assert');let rs=Array.from({length:100},(_,i)=>({seq:i,time:i*.2,db:Array(280).fill(-90)}));for(let j=49;j<=51;j++)for(let b=69;b<=80;b++)rs[j].db[b]=-45;let e={time:10.25,direction:'rx',frequency_hz:909875000,radio:'host-rf',type:'GRP_TXT',length:50};let a=alignPacketEvents(rs,[e],909500000,910900000)[0];assert(a.alignmentShift!==undefined);rs=rs.map(r=>({...r,seq:r.seq+100,db:Array(280).fill(-90)}));let b=alignPacketEvents(rs,[e],909500000,910900000)[0];assert.equal(a.displayTime,b.displayTime);let many=Array.from({length:1600},(_,i)=>({...e,time:i/1000}));alignPacketEvents(rs,many,909500000,910900000);assert(alignmentCache.size<=1024);console.log('PASS settled alignment stable after changed energy; cache <=1024');

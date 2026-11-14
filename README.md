@@ -35,7 +35,7 @@ The Pi metadata helper supports `WATERFALL_OPENHOP_DB` to override its database 
 - Audio is the received signal envelope, **not decoded speech or LoRa data**. Both channels are initially selected; autoplay may require a browser click.
 - A `~` label marks conservative visual alignment to a single nearby same-channel energy burst. Ambiguous overlaps, RX reports near local TX and reports with no distinct energy stay at recorded time. This is an approximate association, not packet decoding.
 - Labels come from separate radio observations, not SDR decoding. Timestamps are approximate. A nearby label does not prove that a specific burst belongs to that packet.
-- The waterfall uses color-only RX ticks and small red local-TX triangles rather than text labels. Use the legend for packet types and click a marker for channel and attribution details. Recent packet cards remain available on mobile.
+- The waterfall uses RX ticks and small red local-TX triangles, with sparse labels (at most ten per channel, spaced apart). Use the legend for packet types and click a marker for channel and attribution details. Recent packet cards remain available on mobile. Settled alignment is cached with a 1,024-event bound to avoid jumping labels. Pause freezes the displayed snapshot across resize; freshness uses server-reported age and a monotonic browser timer rather than the browser wall clock.
 - Red **LOCAL TX** labels mark successful transmissions recorded by the local bridge, separately from RX observations. They do not use inferred last-hop attribution. Timing still comes from radio records, not SDR decoding.
 - The primary label can show a last-hop **candidate**, inferred from the final flood-path hash. A question mark marks a unique match among known keys; short-hash collisions and incomplete node knowledge prevent treating it as verified RF identity. Click for evidence, ambiguity and original-source details.
 - Advert names are taken from verified signed adverts. They identify the original advert source, **not necessarily the last repeater that transmitted the RF burst**. Relayed traffic cannot safely be labeled as a known last-hop transmitter without additional evidence.
@@ -47,6 +47,7 @@ The Pi metadata helper supports `WATERFALL_OPENHOP_DB` to override its database 
 python3 -m py_compile server.py water_telemetry.py pi/packet_metadata.py
 python3 -m unittest discover -s tests -v
 node tests/test_alignment.js
+node tests/test_alignment_cache.js
 ```
 
 Production validation included fixed-channel FFT/audio processing, remote metadata retrieval, and rejection of unsupported SSH commands. The packaged configuration substitutes environment values for deployment-specific addresses; configure and test it for your host before replacing a running installation. CPU shares are relative scheduling weights, not a hard CPU cap.
