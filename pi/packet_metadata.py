@@ -53,13 +53,14 @@ def collect():
             for n in db.execute('SELECT pubkey,node_name FROM adverts ORDER BY last_seen DESC LIMIT 10000'):
                 known_nodes.setdefault(str(n['pubkey']).lower(),n['node_name'] or '')
             known_nodes_at=now
-        rows=db.execute('SELECT id,timestamp,type,length,rx_radio_id,payload,packet_hash,upstream_hash,upstream_hash_size FROM packets INDEXED BY idx_packets_timestamp WHERE timestamp>=? AND transmitted=0 ORDER BY timestamp DESC LIMIT 512',(now-60,)).fetchall()
+        rows=db.execute('SELECT id,timestamp,type,length,rx_radio_id,tx_radio_id,transmitted,payload,packet_hash,upstream_hash,upstream_hash_size FROM packets INDEXED BY idx_packets_timestamp WHERE timestamp>=? ORDER BY timestamp DESC LIMIT 512',(now-60,)).fetchall()
     events=[]
     for r in reversed(rows):
-        radio=r['rx_radio_id']
+        is_tx=bool(r['transmitted'])
+        radio=r['tx_radio_id'] if is_tx else r['rx_radio_id']
         if radio not in RADIOS:continue
-        e={'time':r['timestamp'],'frequency_hz':RADIOS[radio],'radio':radio,'type':TYPES.get(r['type'],'OTHER'),'length':r['length'],'timing':'radio record time; approximate RF timing'}
-        e.update(last_hop(r['upstream_hash'],r['upstream_hash_size'],known_nodes))
+        e={'time':r['timestamp'],'frequency_hz':RADIOS[radio],'radio':radio,'direction':'tx' if is_tx else 'rx','type':TYPES.get(r['type'],'OTHER'),'length':r['length'],'timing':'radio record time; approximate RF timing'}
+        if not is_tx:e.update(last_hop(r['upstream_hash'],r['upstream_hash_size'],known_nodes))
         try:e.update(decode(r['type'],r['payload'] or ''))
         except Exception:pass
         events.append(e)

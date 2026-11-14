@@ -34,7 +34,8 @@ The Pi metadata helper supports `WATERFALL_OPENHOP_DB` to override its database 
 - Shaded columns mark the two 62.5 kHz channels. The receiver uses 2.4 MS/s centered at 910.200 MHz and 0.9 dB gain. Power is uncalibrated dBFS.
 - Audio is the received signal envelope, **not decoded speech or LoRa data**. Both channels are initially selected; autoplay may require a browser click.
 - Labels come from separate radio observations, not SDR decoding. Timestamps are approximate. A nearby label does not prove that a specific burst belongs to that packet.
-- Each radio event has an off-band tick. Nearby labels may be grouped with a bracket and count, without placing text over the channel energy.
+- Each radio event has an off-band tick. Nearby labels are centered on a grouped bracket and count, without placing text over channel energy.
+- Pink **LOCAL TX** labels mark successful transmissions recorded by the local bridge, separately from RX observations. They do not use inferred last-hop attribution. Timing still comes from radio records, not SDR decoding.
 - The primary label can show a last-hop **candidate**, inferred from the final flood-path hash. A question mark marks a unique match among known keys; short-hash collisions and incomplete node knowledge prevent treating it as verified RF identity. Click for evidence, ambiguity and original-source details.
 - Advert names are taken from verified signed adverts. They identify the original advert source, **not necessarily the last repeater that transmitted the RF burst**. Relayed traffic cannot safely be labeled as a known last-hop transmitter without additional evidence.
 - If public group decoding is enabled later, group sender names are claimed names, not authenticated identities.
