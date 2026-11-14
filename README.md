@@ -33,6 +33,7 @@ The Pi metadata helper supports `WATERFALL_OPENHOP_DB` to override its database 
 
 - Shaded columns mark the two 62.5 kHz channels. The receiver uses 2.4 MS/s centered at 910.200 MHz and 0.9 dB gain. Power is uncalibrated dBFS.
 - Audio is the received signal envelope, **not decoded speech or LoRa data**. Both channels are initially selected; autoplay may require a browser click.
+- A `~` label marks conservative visual alignment to a single nearby same-channel energy burst. Ambiguous overlaps, RX reports near local TX and reports with no distinct energy stay at recorded time. This is an approximate association, not packet decoding.
 - Labels come from separate radio observations, not SDR decoding. Timestamps are approximate. A nearby label does not prove that a specific burst belongs to that packet.
 - Each radio event has an off-band tick. Nearby labels are centered on a grouped bracket and count, without placing text over channel energy.
 - Pink **LOCAL TX** labels mark successful transmissions recorded by the local bridge, separately from RX observations. They do not use inferred last-hop attribution. Timing still comes from radio records, not SDR decoding.
@@ -45,6 +46,7 @@ The Pi metadata helper supports `WATERFALL_OPENHOP_DB` to override its database 
 ```sh
 python3 -m py_compile server.py water_telemetry.py pi/packet_metadata.py
 python3 -m unittest discover -s tests -v
+node tests/test_alignment.js
 ```
 
 Production validation included fixed-channel FFT/audio processing, remote metadata retrieval, and rejection of unsupported SSH commands. The packaged configuration substitutes environment values for deployment-specific addresses; configure and test it for your host before replacing a running installation. CPU shares are relative scheduling weights, not a hard CPU cap.

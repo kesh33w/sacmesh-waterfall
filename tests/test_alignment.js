@@ -1,0 +1,13 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');const path=require('path');
+const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+const start=html.indexOf('function alignPacketEvents('), end=html.indexOf('function drawPackets(',start);
+assert(start>=0 && end>start);
+vm.runInThisContext(html.slice(start,end));
+let rs=Array.from({length:100},(_,i)=>({time:i*.2,db:Array(280).fill(-90)}));for(let j=49;j<=51;j++)for(let b=69;b<=80;b++)rs[j].db[b]=-45;
+const ev=(direction='rx',time=10.25)=>({direction,time,frequency_hz:909875000,radio:'host-rf'}),run=e=>alignPacketEvents(rs,e,909500000,910900000);
+assert(run([ev()])[0].alignmentShift!==undefined);
+assert(run([ev(),ev('tx')])[0].alignmentShift===undefined);
+assert(run([ev(),ev('rx',10.3)]).every(e=>e.alignmentShift===undefined));
+assert(run([ev('rx',15)])[0].alignmentShift===undefined);
+let flat=rs.map(r=>({...r,db:Array(280).fill(-90)}));assert(alignPacketEvents(flat,[ev()],909500000,910900000)[0].alignmentShift===undefined);
+console.log('PASS: unique burst; RX exclusion beside TX; overlapping report ambiguity; distant report; no energy');
