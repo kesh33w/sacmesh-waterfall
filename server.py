@@ -83,6 +83,14 @@ def ssh_command(command):
             '-o', 'ServerAliveCountMax=2', os.environ['WATERFALL_SDR_HOST'], command]
 
 
+def metadata_is_fresh(generated_at, now=None):
+    # NTP-synchronized Pi and NAS may differ slightly. Never accept arbitrary future data.
+    if not isinstance(generated_at, (int, float)) or isinstance(generated_at, bool):
+        return False
+    age = (time.time() if now is None else now) - generated_at
+    return -2.0 <= age < 10.0
+
+
 def packet_feed():
     # Receives only pre-sanitized observations, never the bridge database.
     global packet_feed_ok
@@ -92,7 +100,7 @@ def packet_feed():
             if p.returncode or len(p.stdout) > 512000:
                 raise ValueError('Metadata unavailable')
             value = json.loads(p.stdout)
-            if not 0 <= time.time()-value['generated_at'] < 10:
+            if not metadata_is_fresh(value['generated_at']):
                 raise ValueError('Stale metadata')
             temporary = Path('/run/waterfall-metadata/events.tmp')
             temporary.write_bytes(p.stdout)
@@ -211,12 +219,12 @@ class Handler(BaseHTTPRequestHandler):
                 if metadata_path.stat().st_size > 512000:
                     raise ValueError('Oversize metadata')
                 metadata = json.loads(metadata_path.read_text())
-                if not 0 <= time.time()-metadata['generated_at'] < 10:
+                if not metadata_is_fresh(metadata['generated_at']):
                     raise ValueError('Stale metadata')
                 body = json.dumps(metadata, separators=(',', ':')).encode()
             except (OSError, ValueError, KeyError):
                 with packet_lock:
-                    events = [e for e in packet_events if time.time()-e['time'] <= 60]
+                    events = [e for e in packet_events if -2.0 <= time.time()-e['time'] <= 60]
                 body = json.dumps({'events': events, 'feed_connected': packet_feed_ok, 'note': 'Radio observations, not SDR packet decodes. Host receipt times are approximate.'}, separators=(',', ':')).encode()
             mime = 'application/json'
         elif parsed.path == '/api/system':
