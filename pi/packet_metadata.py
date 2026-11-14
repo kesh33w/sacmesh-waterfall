@@ -12,6 +12,8 @@ TYPES={0:'REQ',1:'RESPONSE',2:'TXT_MSG',3:'ACK',4:'ADVERT',5:'GRP_TXT',6:'GRP_DA
 CHANNELS=[]  # Public-channel allowlist awaiting explicit verification.
 KEYS=[(n,hashlib.sha256(n.encode()).digest()[:16].hex()) for n in CHANNELS]
 handler=GroupTextHandler(None,None,lambda *a:None,None)
+known_nodes={}
+known_nodes_at=0
 def clean(value,limit):
     return ''.join(c for c in str(value) if c.isprintable())[:limit]
 @functools.lru_cache(maxsize=1024)
@@ -29,23 +31,39 @@ def decode(kind,payload):
             plain=handler._decrypt_channel_message(key,p[1:3],p[3:])
             data=handler._parse_plaintext_message(plain) if plain else None
             if not data:continue
-            content=data['content'];sender,text=handler._extract_sender_from_message(content)
-            return {'sender':clean(sender,64) if sender!='Unknown' else '', 'message':clean(text,200),'channel':name,'identity':'claimed group sender; not authenticated'}
+            return {'channel':name}  # Never export chat bodies or claimed chat names.
     return {}
+def last_hop(value,size,nodes):
+    if not value or size not in (1,2,3):return {}
+    h=str(value).lower()
+    if len(h)!=size*2 or any(c not in '0123456789abcdef' for c in h):return {}
+    matches=[name for key,name in nodes.items() if key.startswith(h)]
+    result={'last_hop_hash':h.upper(),'last_hop_candidates':len(matches),
+            'last_hop_evidence':'final flood-path hash; not authenticated RF transmitter identity'}
+    if len(matches)==1 and matches[0]:result['last_hop_name']=clean(matches[0],64)
+    return result
+
 def collect():
+    global known_nodes,known_nodes_at
     now=time.time()
     with contextlib.closing(sqlite3.connect('file:'+DB+'?mode=ro',uri=True,timeout=.1)) as db:
         db.execute('PRAGMA query_only=ON');db.row_factory=sqlite3.Row
-        rows=db.execute('SELECT id,timestamp,type,length,rx_radio_id,payload,packet_hash FROM packets INDEXED BY idx_packets_timestamp WHERE timestamp>=? AND transmitted=0 ORDER BY timestamp DESC LIMIT 512',(now-60,)).fetchall()
+        if now-known_nodes_at>60:
+            known_nodes={}
+            for n in db.execute('SELECT pubkey,node_name FROM adverts ORDER BY last_seen DESC LIMIT 10000'):
+                known_nodes.setdefault(str(n['pubkey']).lower(),n['node_name'] or '')
+            known_nodes_at=now
+        rows=db.execute('SELECT id,timestamp,type,length,rx_radio_id,payload,packet_hash,upstream_hash,upstream_hash_size FROM packets INDEXED BY idx_packets_timestamp WHERE timestamp>=? AND transmitted=0 ORDER BY timestamp DESC LIMIT 512',(now-60,)).fetchall()
     events=[]
     for r in reversed(rows):
         radio=r['rx_radio_id']
         if radio not in RADIOS:continue
         e={'time':r['timestamp'],'frequency_hz':RADIOS[radio],'radio':radio,'type':TYPES.get(r['type'],'OTHER'),'length':r['length'],'timing':'radio record time; approximate RF timing'}
+        e.update(last_hop(r['upstream_hash'],r['upstream_hash_size'],known_nodes))
         try:e.update(decode(r['type'],r['payload'] or ''))
         except Exception:pass
         events.append(e)
-    return {'generated_at':now,'events':events,'feed_connected':True,'note':'Original source where known, not necessarily the last RF transmitter. Group names are claimed. Radio reports, not SDR decodes.'}
+    return {'generated_at':now,'events':events,'feed_connected':True,'note':'Last flood-path hop where available. Names with ? are unique known-prefix candidates, not authenticated transmitters. Radio reports, not SDR decodes.'}
 def main():
     while True:
         try:

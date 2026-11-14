@@ -25,7 +25,7 @@ The optional `public` Compose profile runs Cloudflare Tunnel using a separately 
 
 `WATERFALL_SDR_HOST` is required, in `user@host` form. `WATERFALL_BIND` defaults to localhost and `WATERFALL_PORT` to 8767. `WATERFALL_TRUSTED_PROXIES` is a comma-separated list of exact forwarding-peer addresses allowed to supply `CF-Connecting-IP`; leave it empty unless you control the forwarding path. `WATERFALL_DOMAIN` labels telemetry.
 
-The private Unix socket `/telemetry/telemetry.sock` serves `/v1/snapshot` for an incoming-connections monitor. It contains viewer addresses and request metadata and is mode 0600. Viewer records expire after 15 seconds without polling. The host-resource strip reports the **web/DSP server**, not the remote Pi.
+The private Unix socket `/telemetry/telemetry.sock` serves `/v1/snapshot` for an incoming-connections monitor. It contains viewer addresses and request metadata and is mode 0600. Viewer records expire after 15 seconds without polling. The host-resource strip reports the **web/DSP server**, not the remote Pi. Customize its display label with the `data-host-label` attribute on `<body>` in `index.html` (the live deployment uses `Synology RS1221+`); an empty value uses the generic label.
 
 The Pi metadata helper supports `WATERFALL_OPENHOP_DB` to override its database path. Its radio IDs and frequencies must match your OpenHop installation. The public channel allowlist is intentionally empty: group-message decoding is disabled until the operator explicitly configures channels intended for public display. Private messages are not exported.
 
@@ -34,6 +34,8 @@ The Pi metadata helper supports `WATERFALL_OPENHOP_DB` to override its database 
 - Shaded columns mark the two 62.5 kHz channels. The receiver uses 2.4 MS/s centered at 910.200 MHz and 0.9 dB gain. Power is uncalibrated dBFS.
 - Audio is the received signal envelope, **not decoded speech or LoRa data**. Both channels are initially selected; autoplay may require a browser click.
 - Labels come from separate radio observations, not SDR decoding. Timestamps are approximate. A nearby label does not prove that a specific burst belongs to that packet.
+- Each radio event has an off-band tick. Nearby labels may be grouped with a bracket and count, without placing text over the channel energy.
+- The primary label can show a last-hop **candidate**, inferred from the final flood-path hash. A question mark marks a unique match among known keys; short-hash collisions and incomplete node knowledge prevent treating it as verified RF identity. Click for evidence, ambiguity and original-source details.
 - Advert names are taken from verified signed adverts. They identify the original advert source, **not necessarily the last repeater that transmitted the RF burst**. Relayed traffic cannot safely be labeled as a known last-hop transmitter without additional evidence.
 - If public group decoding is enabled later, group sender names are claimed names, not authenticated identities.
 
