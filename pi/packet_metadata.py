@@ -9,8 +9,11 @@ OUT=Path('/run/waterfall-metadata/events.json')
 RADIOS={'host-rf':909875000,'bay':910525000}
 TYPES={0:'REQ',1:'RESPONSE',2:'TXT_MSG',3:'ACK',4:'ADVERT',5:'GRP_TXT',6:'GRP_DATA',7:'ANON_REQ',8:'PATH',9:'TRACE',10:'MULTIPART',11:'CONTROL'}
 # Only public hashtag channels previously confirmed to use their standard derived key.
-CHANNELS=[]  # Public-channel allowlist awaiting explicit verification.
+# Public Bay Area directory and operator-approved Sacramento hashtag channels.
+CHANNELS=['#909public', '#909test', '#910public', '#910test', '#95033', '#95033earthquake', '#95033power', '#95033pulsepoint', '#95033weather', '#alameda', '#alert', '#bookclub', '#bot', '#cert', '#earthquake', '#eastbay', '#event', '#fire', '#healthcheck', '#marin', '#mcmonday', '#meshcore-rs', '#novato', '#power', '#public', '#queer', '#sacmesh', '#sacramento', '#sanleandro', '#sf', '#sfsacbridge', '#slo', '#sonoma', '#sonoma-county', '#south-bay-peninsula', '#test', '#thegoodplace', '#wardriving', '#weather', '#yo']
 KEYS=[(n,hashlib.sha256(n.encode()).digest()[:16].hex()) for n in CHANNELS]
+# Firmware-default Public key, also bundled by CoreScope upstream. Not a private credential.
+KEYS.append(('Public','8b3387e9c5cdea6ac9e5edbaa115cd72'))
 handler=GroupTextHandler(None,None,lambda *a:None,None)
 known_nodes={}
 known_nodes_at=0
@@ -26,12 +29,14 @@ def decode(kind,payload):
         info=decode_appdata(app);name=clean(info.get('node_name') or info.get('name') or '',64)
         return {'sender':name,'identity':'signed advert origin','origin_key':pub.hex()} if name else {}
     if kind==5 and len(p)>=19:
+        matches=[]
         for name,key in KEYS:
             if handler._derive_channel_hash(key)!=p[0]:continue
             plain=handler._decrypt_channel_message(key,p[1:3],p[3:])
             data=handler._parse_plaintext_message(plain) if plain else None
             if not data:continue
-            return {'channel':name}  # Never export chat bodies or claimed chat names.
+            matches.append(name)
+        if len(matches)==1:return {'channel':matches[0]}  # Never export chat bodies or claimed chat names.
     return {}
 def last_hop(value,size,nodes):
     if not value or size not in (1,2,3):return {}

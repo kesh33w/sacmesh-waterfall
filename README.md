@@ -27,7 +27,7 @@ The optional `public` Compose profile runs Cloudflare Tunnel using a separately 
 
 The private Unix socket `/telemetry/telemetry.sock` serves `/v1/snapshot` for an incoming-connections monitor. It contains viewer addresses and request metadata and is mode 0600. Viewer records expire after 15 seconds without polling. The host-resource strip reports the **web/DSP server**, not the remote Pi. Customize its display label with the `data-host-label` attribute on `<body>` in `index.html` (the live deployment uses `Synology RS1221+`); an empty value uses the generic label.
 
-The Pi metadata helper supports `WATERFALL_OPENHOP_DB` to override its database path. Its radio IDs and frequencies must match your OpenHop installation. The public channel allowlist is intentionally empty: group-message decoding is disabled until the operator explicitly configures channels intended for public display. Private messages are not exported.
+The Pi metadata helper supports `WATERFALL_OPENHOP_DB` to override its database path. Its radio IDs and frequencies must match your OpenHop installation. The helper includes a narrow allowlist of 40 public hashtag channels plus the firmware-default Public channel. It uses the standard derived keys, validates candidate decryptions, and exports a channel name only for a unique valid match. A short channel-hash match alone is insufficient. Unknown or ambiguous channels stay unnamed. **Chat bodies and claimed chat sender names are never exported**, and no private-channel keys are included. Operators can review the `CHANNELS` list before enabling the helper.
 
 ## Interpret the display
 
@@ -39,7 +39,7 @@ The Pi metadata helper supports `WATERFALL_OPENHOP_DB` to override its database 
 - Pink **LOCAL TX** labels mark successful transmissions recorded by the local bridge, separately from RX observations. They do not use inferred last-hop attribution. Timing still comes from radio records, not SDR decoding.
 - The primary label can show a last-hop **candidate**, inferred from the final flood-path hash. A question mark marks a unique match among known keys; short-hash collisions and incomplete node knowledge prevent treating it as verified RF identity. Click for evidence, ambiguity and original-source details.
 - Advert names are taken from verified signed adverts. They identify the original advert source, **not necessarily the last repeater that transmitted the RF burst**. Relayed traffic cannot safely be labeled as a known last-hop transmitter without additional evidence.
-- If public group decoding is enabled later, group sender names are claimed names, not authenticated identities.
+- A channel label identifies a matching public-channel key, not an authenticated sender identity.
 
 ## Checks
 
