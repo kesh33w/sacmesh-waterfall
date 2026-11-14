@@ -8,3 +8,12 @@ assert.equal(hopLabel({last_hop_candidates:1,last_hop_name:'Repeater'}),'? Repea
 assert.equal(hopLabel({last_hop_hash:'CD'}),'hop CD?');
 assert.equal(hopLabel({sender:'Original'}),'unknown hop');
 console.log('PASS: TX name, unknown TX, collision precedence, candidate name, hash, no original-sender fallback');
+vm.runInThisContext(html.match(/function hasNamedTransmitter\(e\)\{[^\n]+\}/)[0]);
+assert(hasNamedTransmitter({direction:'tx',transmitter_name:'Bridge'}));
+assert(hasNamedTransmitter({direction:'tx',transmitter_key:'PUBLICKEY'}));
+assert(!hasNamedTransmitter({direction:'tx',sender:'Original'}));
+assert(hasNamedTransmitter({last_hop_name:'Candidate',last_hop_candidates:1}));
+assert(!hasNamedTransmitter({last_hop_name:'Collision',last_hop_candidates:2}));
+assert(!hasNamedTransmitter({last_hop_name:'Uncounted'}));
+assert(!hasNamedTransmitter({last_hop_hash:'AB',last_hop_candidates:0}));
+console.log('PASS: label eligibility rejects unknown, ambiguous and original-sender-only events');
