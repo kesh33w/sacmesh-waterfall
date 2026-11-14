@@ -266,7 +266,7 @@ class Handler(BaseHTTPRequestHandler):
             if after and not reset:
                 data = [row for row in data if row['seq'] > after]
             body = json.dumps({'center_hz': CENTER, 'sample_rate': RATE,
-                               'low_hz': LOW, 'high_hz': HIGH, 'gain_db': 0.9,
+                               'low_hz': LOW, 'high_hz': HIGH, 'gain_db': 9.9,
                                'markers_hz': [909875000, 910525000],
                                'age_seconds': age, 'live': age is not None and age < 2,
                                'reset': reset, 'rows': data}, separators=(',', ':')).encode()

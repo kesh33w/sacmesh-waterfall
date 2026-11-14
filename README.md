@@ -31,7 +31,7 @@ The Pi metadata helper supports `WATERFALL_OPENHOP_DB` to override its database 
 
 ## Interpret the display
 
-- Shaded columns mark the two 62.5 kHz channels. The receiver uses 2.4 MS/s centered at 910.200 MHz and 0.9 dB gain. Power is uncalibrated dBFS.
+- Shaded columns mark the two 62.5 kHz channels. The receiver uses 2.4 MS/s centered at 910.200 MHz and 9.9 dB gain. Power is uncalibrated dBFS.
 - Audio is the received signal envelope, **not decoded speech or LoRa data**. Both channels are initially selected; autoplay may require a browser click.
 - A `~` label marks conservative visual alignment to a single nearby same-channel energy burst. Ambiguous overlaps, RX reports near local TX and reports with no distinct energy stay at recorded time. This is an approximate association, not packet decoding.
 - Labels come from separate radio observations, not SDR decoding. Timestamps are approximate. A nearby label does not prove that a specific burst belongs to that packet.
@@ -55,3 +55,5 @@ Production validation included fixed-channel FFT/audio processing, remote metada
 ## Provenance and licensing
 
 FFT settings/windowing were adapted from the earlier WATER project's `smf_utility_bot/sdr_assist.py`. This is the standalone SacMesh receiver, not the full WATER bot. No license grant is asserted: the source snapshot had no license, so clarify licensing before redistributing derivatives. NumPy, RTL-SDR and OpenHop retain their respective upstream licenses.
+
+The display defaults to a −82 dBFS floor and 30 dB color range. The reversible 20–60 dB range slider changes contrast, not receiver gain. Gain changes require updating the fixed Pi capture wrapper and matching API metadata. Compare clipping and noise on your own installation; stronger displayed bursts alone do not prove improved reception sensitivity.

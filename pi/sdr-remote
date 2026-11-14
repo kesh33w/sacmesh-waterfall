@@ -2,7 +2,7 @@
 # Dedicated NAS key forced-command entrypoint; no shell and no user arguments.
 set -eu
 case "${SSH_ORIGINAL_COMMAND:-}" in
- iq) exec /usr/bin/rtl_sdr -d 0 -f 910200000 -s 2400000 -g 0.9 - ;;
+ iq) exec /usr/bin/rtl_sdr -d 0 -f 910200000 -s 2400000 -g 9.9 - ;;
  metadata) exec /usr/bin/cat /run/waterfall-metadata/events.json ;;
  *) echo 'Unsupported waterfall command' >&2; exit 126 ;;
 esac
