@@ -36,7 +36,7 @@ The Pi metadata helper supports `WATERFALL_OPENHOP_DB` to override its database 
 - A `~` label marks conservative visual alignment to a single nearby same-channel energy burst. Ambiguous overlaps, RX reports near local TX and reports with no distinct energy stay at recorded time. This is an approximate association, not packet decoding.
 - Labels come from separate radio observations, not SDR decoding. Timestamps are approximate. A nearby label does not prove that a specific burst belongs to that packet.
 - Each radio event has an off-band tick. Nearby labels are centered on a grouped bracket and count, without placing text over channel energy.
-- Pink **LOCAL TX** labels mark successful transmissions recorded by the local bridge, separately from RX observations. They do not use inferred last-hop attribution. Timing still comes from radio records, not SDR decoding.
+- Red **LOCAL TX** labels mark successful transmissions recorded by the local bridge, separately from RX observations. They do not use inferred last-hop attribution. Timing still comes from radio records, not SDR decoding.
 - The primary label can show a last-hop **candidate**, inferred from the final flood-path hash. A question mark marks a unique match among known keys; short-hash collisions and incomplete node knowledge prevent treating it as verified RF identity. Click for evidence, ambiguity and original-source details.
 - Advert names are taken from verified signed adverts. They identify the original advert source, **not necessarily the last repeater that transmitted the RF burst**. Relayed traffic cannot safely be labeled as a known last-hop transmitter without additional evidence.
 - A channel label identifies a matching public-channel key, not an authenticated sender identity.
