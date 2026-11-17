@@ -6,7 +6,7 @@ from openhop_core.protocol import Identity,parse_advert_payload,decode_appdata
 from openhop_core.node.handlers.group_text import GroupTextHandler
 DB=os.environ.get('WATERFALL_OPENHOP_DB','/var/lib/openhop_repeater/production/repeater.db')
 OUT=Path('/run/waterfall-metadata/events.json')
-RADIOS={'host-rf':909875000,'bay':910525000}
+RADIOS={'host-rf':909875000,'bay':910525000,'v3-909-shadow':909875000,'v3-910-shadow':910525000,'rak910-shadow':910525000}
 TYPES={0:'REQ',1:'RESPONSE',2:'TXT_MSG',3:'ACK',4:'ADVERT',5:'GRP_TXT',6:'GRP_DATA',7:'ANON_REQ',8:'PATH',9:'TRACE',10:'MULTIPART',11:'CONTROL'}
 # Only public hashtag channels previously confirmed to use their standard derived key.
 # Public Bay Area directory and operator-approved Sacramento hashtag channels.
@@ -48,6 +48,28 @@ def last_hop(value,size,nodes):
     if len(matches)==1 and matches[0]:result['last_hop_name']=clean(matches[0],64)
     return result
 
+def read_records(db, since):
+    """Physical successful egresses replace logical TX rows; retain legacy TX only
+    for older databases without the egress table. Failed attempts are never transmit markers.
+    Query egress time independently: a queued packet can be older than the window.
+    """
+    has_egress = db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='packet_egress'").fetchone()
+    tx_filter = ' AND NOT p.transmitted' if has_egress else ''
+    rows = [dict(r) for r in db.execute(
+        'SELECT p.*, NULL AS egress_id FROM packets p INDEXED BY idx_packets_timestamp '
+        'WHERE p.timestamp>=?'+tx_filter+' '
+        'ORDER BY p.timestamp DESC LIMIT 512', (since,))]
+    if has_egress:
+        for r in db.execute(
+            'SELECT p.*, e.id AS egress_id, e.timestamp AS egress_time, e.radio_id AS egress_radio '
+            'FROM packet_egress e INDEXED BY idx_packet_egress_time_radio '
+            'JOIN packets p ON p.id=e.packet_id WHERE e.timestamp>=? AND e.success=1 '
+            'ORDER BY e.timestamp DESC LIMIT 512', (since,)):
+            row = dict(r)
+            row.update(timestamp=row['egress_time'], tx_radio_id=row['egress_radio'], transmitted=1)
+            rows.append(row)
+    return sorted(rows, key=lambda r: (r['timestamp'], r['id'], r['egress_id'] or 0))[-512:]
+
 def collect():
     global known_nodes,known_nodes_at
     now=time.time()
@@ -58,17 +80,20 @@ def collect():
             for n in db.execute('SELECT pubkey,node_name FROM adverts ORDER BY last_seen DESC LIMIT 10000'):
                 known_nodes.setdefault(str(n['pubkey']).lower(),n['node_name'] or '')
             known_nodes_at=now
-        rows=db.execute('SELECT id,timestamp,type,length,rx_radio_id,tx_radio_id,transmitted,payload,packet_hash,upstream_hash,upstream_hash_size FROM packets INDEXED BY idx_packets_timestamp WHERE timestamp>=? ORDER BY timestamp DESC LIMIT 512',(now-60,)).fetchall()
+        rows=read_records(db, now-60)
     try:
         transmitter=json.loads(Path('/opt/waterfall-metadata/transmitter.json').read_text())
         transmitter_name=clean(transmitter.get('name',''),64)
     except Exception:transmitter_name=''
     events=[]
-    for r in reversed(rows):
+    for r in rows:
         is_tx=bool(r['transmitted'])
         radio=r['tx_radio_id'] if is_tx else r['rx_radio_id']
         if radio not in RADIOS:continue
+        if not is_tx and radio not in ('host-rf','bay'):continue
         e={'time':r['timestamp'],'frequency_hz':RADIOS[radio],'radio':radio,'direction':'tx' if is_tx else 'rx','type':TYPES.get(r['type'],'OTHER'),'length':r['length'],'timing':'radio record time; approximate RF timing'}
+        e['event_id']=('egress:'+str(r['egress_id'])) if r['egress_id'] is not None else 'packet:'+str(r['id'])
+        if is_tx and r['egress_id'] is not None:e['timing']='physical radio TX completion; approximate RF end time'
         if is_tx and transmitter_name:e['transmitter_name']=transmitter_name
         if not is_tx:e.update(last_hop(r['upstream_hash'],r['upstream_hash_size'],known_nodes))
         try:e.update(decode(r['type'],r['payload'] or ''))
