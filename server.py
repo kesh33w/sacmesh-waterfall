@@ -210,7 +210,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send_error(403)
             return
         parsed = urlparse(self.path)
-        if self.path == '/':
+        if parsed.path == '/':
             body = Path(__file__).with_name('index.html').read_bytes()
             mime = 'text/html; charset=utf-8'
         elif parsed.path == '/api/packets':
@@ -279,7 +279,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header('Content-Length', str(len(body)))
         self.send_header('Cache-Control', 'no-store')
         self.send_header('X-Content-Type-Options', 'nosniff')
-        self.send_header('Content-Security-Policy', "default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'")
+        self.send_header('Content-Security-Policy', "default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; frame-ancestors https://sacmesh.org")
         self.end_headers()
         try:
             self.wfile.write(body)

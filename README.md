@@ -1,3 +1,7 @@
+## November 17 deployment sync
+
+Includes the deployed embedded view for sacmesh.org, adjusted band viewport, and silent embedded-mode startup. Server root routing accepts embed query parameters; framing is limited to sacmesh.org. Host-specific bind and SSH addresses remain environment-configured rather than published.
+
 # SacMesh Waterfall
 
 Live receive-only spectrum for **909.875 and 910.525 MHz**, with dual-channel audio, packet labels and host statistics.
