@@ -17,3 +17,8 @@ assert(!hasNamedTransmitter({last_hop_name:'Collision',last_hop_candidates:2}));
 assert(!hasNamedTransmitter({last_hop_name:'Uncounted'}));
 assert(!hasNamedTransmitter({last_hop_hash:'AB',last_hop_candidates:0}));
 console.log('PASS: label eligibility rejects unknown, ambiguous and original-sender-only events');
+
+assert(!hasNamedTransmitter({direction:'tx',transmitter_name:'💧BD6E sacmesh.org'}));
+assert(!hasNamedTransmitter({direction:'tx',transmitter_key:'BD6E1234'}));
+assert(hasNamedTransmitter({direction:'rx',last_hop_name:'Other repeater',last_hop_candidates:1}));
+console.log('PASS: BD6E TX text hidden without suppressing other labels');
