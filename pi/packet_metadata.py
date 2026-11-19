@@ -8,9 +8,11 @@ DB=os.environ.get('WATERFALL_OPENHOP_DB','/var/lib/openhop_repeater/production/r
 OUT=Path('/run/waterfall-metadata/events.json')
 # Every radio id the repeater can record, current and historical. A TX on an id missing here is
 # silently skipped, so add new radios here when they join the repeater's config.
-RADIOS={'host-rf':909875000,'bay':910525000,'rak909':909875000,'rak910':910525000,
+RADIOS={'g3909':909875000,'g3910':910525000,'rak909':909875000,'rak910':910525000,
         # Former ids, kept so older records still place correctly.
-        'rak910-shadow':910525000,'v3-909-shadow':909875000,'v3-910-shadow':910525000}
+        'host-rf':909875000,'bay':910525000,'rak910-shadow':910525000,'v3-909-shadow':909875000,'v3-910-shadow':910525000}
+# Receptions are shown only from the two main G3 radios (current and former ids).
+RX_RADIOS={'g3909','g3910','host-rf','bay'}
 TYPES={0:'REQ',1:'RESPONSE',2:'TXT_MSG',3:'ACK',4:'ADVERT',5:'GRP_TXT',6:'GRP_DATA',7:'ANON_REQ',8:'PATH',9:'TRACE',10:'MULTIPART',11:'CONTROL'}
 # Only public hashtag channels previously confirmed to use their standard derived key.
 # Public Bay Area directory and operator-approved Sacramento hashtag channels.
@@ -94,7 +96,7 @@ def collect():
         is_tx=bool(r['transmitted'])
         radio=r['tx_radio_id'] if is_tx else r['rx_radio_id']
         if radio not in RADIOS:continue
-        if not is_tx and radio not in ('host-rf','bay'):continue
+        if not is_tx and radio not in RX_RADIOS:continue
         e={'time':r['timestamp'],'frequency_hz':RADIOS[radio],'radio':radio,'direction':'tx' if is_tx else 'rx','type':TYPES.get(r['type'],'OTHER'),'length':r['length'],'timing':'radio record time; approximate RF timing'}
         e['event_id']=('egress:'+str(r['egress_id'])) if r['egress_id'] is not None else 'packet:'+str(r['id'])
         if is_tx and r['egress_id'] is not None:e['timing']='physical radio TX completion; approximate RF end time'

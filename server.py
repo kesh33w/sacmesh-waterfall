@@ -7,7 +7,6 @@ import collections
 import ipaddress
 import json
 import os
-import re
 from pathlib import Path
 import signal
 import subprocess
@@ -71,8 +70,6 @@ def demodulate(payload):
 packet_events = collections.deque(maxlen=512)
 packet_lock = threading.Lock()
 packet_feed_ok = False
-RX_EVENT = re.compile(r' - Dispatcher - INFO - RX (host-rf|bay) ([A-Z_0-9]+) \((\d+)\) len=(\d+) ')
-RADIO_HZ = {'host-rf': 909875000, 'bay': 910525000}
 
 
 def ssh_command(command):
