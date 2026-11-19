@@ -72,12 +72,17 @@ packet_lock = threading.Lock()
 packet_feed_ok = False
 
 
-def ssh_command(command):
+# IQ may come from a separate receiver host (for example an SDR on another machine at the
+# same site); packet metadata always comes from WATERFALL_SDR_HOST, where the bridge runs.
+GAIN_DB = float(os.environ.get('WATERFALL_GAIN_DB', '9.9'))
+
+
+def ssh_command(command, host=None):
     return ['/usr/bin/ssh', '-T', '-i', '/run/ssh/id_ed25519',
             '-o', 'UserKnownHostsFile=/run/ssh/known_hosts', '-o', 'StrictHostKeyChecking=yes',
             '-o', 'BatchMode=yes', '-o', 'ControlMaster=auto', '-o', 'ControlPath=/tmp/ssh-%C',
             '-o', 'ControlPersist=30', '-o', 'ConnectTimeout=5', '-o', 'ServerAliveInterval=10',
-            '-o', 'ServerAliveCountMax=2', os.environ['WATERFALL_SDR_HOST'], command]
+            '-o', 'ServerAliveCountMax=2', host or os.environ['WATERFALL_SDR_HOST'], command]
 
 
 def metadata_is_fresh(generated_at, now=None):
@@ -158,7 +163,7 @@ def spectrum(payload):
 
 def capture():
     global child, sequence, audio_sequence
-    child = subprocess.Popen(ssh_command('iq'), stdout=subprocess.PIPE)
+    child = subprocess.Popen(ssh_command('iq', os.environ.get('WATERFALL_IQ_HOST') or None), stdout=subprocess.PIPE)
     peak = np.full(280, -180.)
     count = 0
     clipped = 0
@@ -263,7 +268,7 @@ class Handler(BaseHTTPRequestHandler):
             if after and not reset:
                 data = [row for row in data if row['seq'] > after]
             body = json.dumps({'center_hz': CENTER, 'sample_rate': RATE,
-                               'low_hz': LOW, 'high_hz': HIGH, 'gain_db': 9.9,
+                               'low_hz': LOW, 'high_hz': HIGH, 'gain_db': GAIN_DB,
                                'markers_hz': [909875000, 910525000],
                                'age_seconds': age, 'live': age is not None and age < 2,
                                'reset': reset, 'rows': data}, separators=(',', ':')).encode()

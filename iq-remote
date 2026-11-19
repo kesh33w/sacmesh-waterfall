@@ -1,0 +1,8 @@
+#!/bin/sh
+# Forced-command entrypoint for a separate IQ receiver (WATERFALL_IQ_HOST); IQ only, no shell or arguments.
+# RTL-SDR Blog V3 (R820T) has no 9.9 dB step; 8.7 dB is the nearest. Set WATERFALL_GAIN_DB to match.
+set -eu
+case "${SSH_ORIGINAL_COMMAND:-}" in
+ iq) exec /usr/bin/rtl_sdr -d 0 -f 910200000 -s 2400000 -g 8.7 - ;;
+ *) echo 'Unsupported waterfall command' >&2; exit 126 ;;
+esac

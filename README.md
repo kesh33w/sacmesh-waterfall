@@ -27,7 +27,7 @@ The optional `public` Compose profile runs Cloudflare Tunnel using a separately 
 
 ## Configuration
 
-`WATERFALL_SDR_HOST` is required, in `user@host` form. `WATERFALL_BIND` defaults to localhost and `WATERFALL_PORT` to 8767. `WATERFALL_TRUSTED_PROXIES` is a comma-separated list of exact forwarding-peer addresses allowed to supply `CF-Connecting-IP`; leave it empty unless you control the forwarding path. `WATERFALL_DOMAIN` labels telemetry.
+`WATERFALL_SDR_HOST` is required, in `user@host` form; it serves packet metadata and, by default, IQ. Set `WATERFALL_IQ_HOST` to pull IQ from a different receiver host at the same site (install `iq-remote` there with the same restricted key options) and `WATERFALL_GAIN_DB` to the gain that host's wrapper uses (default 9.9). `WATERFALL_BIND` defaults to localhost and `WATERFALL_PORT` to 8767. `WATERFALL_TRUSTED_PROXIES` is a comma-separated list of exact forwarding-peer addresses allowed to supply `CF-Connecting-IP`; leave it empty unless you control the forwarding path. `WATERFALL_DOMAIN` labels telemetry.
 
 The private Unix socket `/telemetry/telemetry.sock` serves `/v1/snapshot` for an incoming-connections monitor. It contains viewer addresses and request metadata and is mode 0600. Viewer records expire after 15 seconds without polling. The host-resource strip reports the **web/DSP server**, not the remote Pi. Customize its display label with the `data-host-label` attribute on `<body>` in `index.html` (the live deployment uses `Synology RS1221+`); an empty value uses the generic label.
 
@@ -35,7 +35,7 @@ The Pi metadata helper supports `WATERFALL_OPENHOP_DB` to override its database 
 
 ## Interpret the display
 
-- Shaded columns mark the two 62.5 kHz channels. The receiver uses 2.4 MS/s centered at 910.200 MHz and 9.9 dB gain. Power is uncalibrated dBFS.
+- Shaded columns mark the two 62.5 kHz channels. The receiver uses 2.4 MS/s centered at 910.200 MHz; gain is fixed by the capture wrapper (9.9 dB on the V4, 8.7 dB on the R820T-based V3). Power is uncalibrated dBFS.
 - Audio is the received signal envelope, **not decoded speech or LoRa data**. Both channels are initially selected; autoplay may require a browser click.
 - A `~` label marks conservative visual alignment to a single nearby same-channel energy burst. Ambiguous overlaps, RX reports near local TX and reports with no distinct energy stay at recorded time. This is an approximate association, not packet decoding.
 - Labels come from separate radio observations, not SDR decoding. Timestamps are approximate. A nearby label does not prove that a specific burst belongs to that packet.
