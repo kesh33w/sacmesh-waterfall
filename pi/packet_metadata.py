@@ -6,7 +6,11 @@ from openhop_core.protocol import Identity,parse_advert_payload,decode_appdata
 from openhop_core.node.handlers.group_text import GroupTextHandler
 DB=os.environ.get('WATERFALL_OPENHOP_DB','/var/lib/openhop_repeater/production/repeater.db')
 OUT=Path('/run/waterfall-metadata/events.json')
-RADIOS={'host-rf':909875000,'bay':910525000,'v3-909-shadow':909875000,'v3-910-shadow':910525000,'rak910-shadow':910525000}
+# Every radio id the repeater can record, current and historical. A TX on an id missing here is
+# silently skipped, so add new radios here when they join the repeater's config.
+RADIOS={'host-rf':909875000,'bay':910525000,'rak909':909875000,'rak910':910525000,
+        # Former ids, kept so older records still place correctly.
+        'rak910-shadow':910525000,'v3-909-shadow':909875000,'v3-910-shadow':910525000}
 TYPES={0:'REQ',1:'RESPONSE',2:'TXT_MSG',3:'ACK',4:'ADVERT',5:'GRP_TXT',6:'GRP_DATA',7:'ANON_REQ',8:'PATH',9:'TRACE',10:'MULTIPART',11:'CONTROL'}
 # Only public hashtag channels previously confirmed to use their standard derived key.
 # Public Bay Area directory and operator-approved Sacramento hashtag channels.
