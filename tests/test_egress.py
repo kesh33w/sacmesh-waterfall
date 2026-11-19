@@ -28,4 +28,9 @@ class EgressTests(unittest.TestCase):
     def test_rx_preserved(self):
         self.egress();self.db.execute('INSERT INTO packets VALUES(1,101,0,NULL)')
         self.assertEqual(read_records(self.db,100)[0]['transmitted'],0)
+    def test_every_live_radio_has_a_frequency(self):
+        # A TX on an unknown id is dropped from the waterfall, so the live ids must all be listed.
+        radios=next(ast.literal_eval(n.value) for n in source.body if isinstance(n,ast.Assign) and getattr(n.targets[0],'id','')=='RADIOS')
+        for rid,hz in {'host-rf':909875000,'bay':910525000,'rak909':909875000,'rak910':910525000,'rak910-shadow':910525000}.items():
+            self.assertEqual(radios.get(rid),hz,rid)
 if __name__=='__main__':unittest.main()
