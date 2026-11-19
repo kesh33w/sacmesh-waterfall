@@ -31,6 +31,9 @@ class EgressTests(unittest.TestCase):
     def test_every_live_radio_has_a_frequency(self):
         # A TX on an unknown id is dropped from the waterfall, so the live ids must all be listed.
         radios=next(ast.literal_eval(n.value) for n in source.body if isinstance(n,ast.Assign) and getattr(n.targets[0],'id','')=='RADIOS')
-        for rid,hz in {'host-rf':909875000,'bay':910525000,'rak909':909875000,'rak910':910525000,'rak910-shadow':910525000}.items():
+        for rid,hz in {'g3909':909875000,'g3910':910525000,'rak909':909875000,'rak910':910525000,'host-rf':909875000,'bay':910525000,'rak910-shadow':910525000}.items():
             self.assertEqual(radios.get(rid),hz,rid)
+    def test_receptions_show_from_the_main_g3_radios(self):
+        rx=next(ast.literal_eval(n.value) for n in source.body if isinstance(n,ast.Assign) and getattr(n.targets[0],'id','')=='RX_RADIOS')
+        self.assertEqual(rx,{'g3909','g3910','host-rf','bay'})
 if __name__=='__main__':unittest.main()
